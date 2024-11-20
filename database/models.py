@@ -11,7 +11,7 @@ class Base(DeclarativeBase):
 class Price(Base):
     __tablename__ = "prices"
 
-    price_id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
     price: Mapped[float]
     logged_on: Mapped[datetime]
@@ -31,7 +31,7 @@ class Price(Base):
     product: Mapped["Product"] = relationship(back_populates="prices")
 
     def __repr__(self) -> str:
-        return f"Price(price_id={self.price_id!r}, price={self.price!r})"
+        return f"Price(id={self.id!r}, price={self.price!r})"
 
 
 class Product(Base):
@@ -39,6 +39,7 @@ class Product(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
+    updated: Mapped[datetime]
     underline: Mapped[str]
     age_limit: Mapped[Optional[int]]
     description: Mapped[Optional[str]]
