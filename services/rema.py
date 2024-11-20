@@ -77,6 +77,7 @@ def get_products(department):
 
 
 def fetch(save_as_file=False):
+    print(f"Connecting to Rema's API...")
     products = []
     departments = get_departments()
     for department in departments:
@@ -84,12 +85,17 @@ def fetch(save_as_file=False):
         products.extend(department_products)
 
     if save_as_file:
-        with open("data.json", "w") as json_file:
+        with open(f"data_{datetime.now().date()}.json", "w") as json_file:
             json.dump(products, json_file)
 
+    print(f"Fetched {len(products)} products")
     return products
 
 
+def fetch_from_file(file_name):
+    with open(file_name, "r") as json_file:
+        return json.load(json_file)
+
+
 if __name__ == "__main__":
-    products = fetch()
-    print(f"Fetched {len(products)} products")
+    products = fetch(True)
