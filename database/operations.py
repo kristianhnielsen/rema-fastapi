@@ -19,7 +19,7 @@ def process_product_data(product_data, session: Session):
 
 
 def add_products(data):
-    engine: Engine = create_engine("sqlite:///rema.db", echo=True)
+    engine: Engine = create_engine("sqlite:///rema.db")
     with Session(engine) as session:
         Base.metadata.create_all(engine)
 
