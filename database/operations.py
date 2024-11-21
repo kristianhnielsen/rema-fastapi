@@ -25,6 +25,8 @@ def add_products(data):
 
         products, prices = process_product_data(data, session)
 
+        print(f"New products found: {len(products)}")
+        print(f"New prices found: {len(prices)}")
         session.add_all(products)
         session.add_all(prices)
         session.commit()
