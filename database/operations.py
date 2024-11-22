@@ -7,6 +7,13 @@ from database.utils import (
 )
 
 
+class Database:
+    def __init__(self) -> None:
+        self.engine: Engine = create_engine("sqlite:///rema.db")
+        self.session: Session = Session(bind=self.engine)
+        Base.metadata.create_all(self.engine)
+
+
 def process_product_data(product_data, session: Session):
     product_objs = [Product(product) for product in product_data]
     products = remove_duplicates(product_objs, session)
@@ -18,10 +25,9 @@ def process_product_data(product_data, session: Session):
 
 
 def add_products(data):
-    engine: Engine = create_engine("sqlite:///rema.db")
-    with Session(engine) as session:
-        Base.metadata.create_all(engine)
+    db = Database()
 
+    with db.session as session:
         products, prices = process_product_data(data, session)
 
         print(f"New products found: {len(products)}")
