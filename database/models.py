@@ -56,5 +56,23 @@ class Product(Base):
     # Relationship to Price
     prices: Mapped[List["Price"]] = relationship(back_populates="product", uselist=True)
 
+    def __init__(self, data):
+        super().__init__()
+        self.id = data["id"]
+        self.name = data["name"]
+        self.underline = data["underline"]
+        self.age_limit = data["age_limit"]
+        self.description = data["description"]
+        self.info = data["info"]
+        self.image = data["image"]
+        self.temperature_zone = data["temperature_zone"]
+        self.is_self_scale_item = data["is_self_scale_item"]
+        self.is_weight_item = data["is_weight_item"]
+        self.is_available_in_all_stores = data["is_available_in_all_stores"]
+        self.is_batch_item = data["is_batch_item"]
+        self.department_name = data["department_name"]
+        self.department_id = data["department_id"]
+        self.updated = datetime.fromisoformat(data["logged_on"])
+
     def __repr__(self) -> str:
         return f"Product(id={self.id!r}, name={self.name!r})"

@@ -38,23 +38,7 @@ def create_product_object(product_data):
     n = product_data["name"].lower()
     if "marsh" in n:
         print()
-    return Product(
-        id=product_data["id"],
-        name=product_data["name"],
-        underline=product_data["underline"],
-        age_limit=product_data["age_limit"],
-        description=product_data["description"],
-        info=product_data["info"],
-        image=product_data["image"],
-        temperature_zone=product_data["temperature_zone"],
-        is_self_scale_item=product_data["is_self_scale_item"],
-        is_weight_item=product_data["is_weight_item"],
-        is_available_in_all_stores=product_data["is_available_in_all_stores"],
-        is_batch_item=product_data["is_batch_item"],
-        department_name=product_data["department_name"],
-        department_id=product_data["department_id"],
-        updated=datetime.fromisoformat(product_data["logged_on"]),
-    )
+    return Product(data=product_data)
 
 
 def create_price_objects(product_data) -> list[Price]:
