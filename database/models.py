@@ -30,6 +30,23 @@ class Price(Base):
     # Relationship to Product
     product: Mapped["Product"] = relationship(back_populates="prices")
 
+    def __init__(self, price_data, product_data):
+        super().__init__()
+        self.price = price_data["price"]
+        self.price_over_max_quantity = price_data["price_over_max_quantity"]
+        self.max_quantity = price_data["max_quantity"]
+        self.is_advertised = price_data["is_advertised"]
+        self.is_campaign = price_data["is_campaign"]
+        self.starting_at = datetime.fromisoformat(price_data["starting_at"])
+        self.ending_at = datetime.fromisoformat(price_data["ending_at"])
+        self.deposit = price_data["deposit"]
+        self.compare_unit = price_data["compare_unit"]
+        self.compare_unit_price = price_data["compare_unit_price"]
+        self.consumption_unit = price_data["consumption_unit"]
+        self.consumption_quantity = price_data["consumption_quantity"]
+        self.logged_on = datetime.fromisoformat(product_data["logged_on"])
+        self.product_id = product_data["id"]
+
     def __repr__(self) -> str:
         return f"Price(id={self.id!r}, price={self.price!r})"
 

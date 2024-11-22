@@ -55,19 +55,4 @@ def create_price_objects(product_data) -> list[Price]:
 
 
 def create_price_object(price_data, product_data) -> Price:
-    return Price(
-        price=price_data["price"],
-        price_over_max_quantity=price_data["price_over_max_quantity"],
-        max_quantity=price_data["max_quantity"],
-        is_advertised=price_data["is_advertised"],
-        is_campaign=price_data["is_campaign"],
-        starting_at=datetime.fromisoformat(price_data["starting_at"]),
-        ending_at=datetime.fromisoformat(price_data["ending_at"]),
-        deposit=price_data["deposit"],
-        compare_unit=price_data["compare_unit"],
-        compare_unit_price=price_data["compare_unit_price"],
-        consumption_unit=price_data["consumption_unit"],
-        consumption_quantity=price_data["consumption_quantity"],
-        logged_on=datetime.fromisoformat(product_data["logged_on"]),
-        product_id=product_data["id"],
-    )
+    return Price(price_data, product_data)
