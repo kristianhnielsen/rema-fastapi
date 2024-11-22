@@ -34,25 +34,12 @@ def is_duplicate(obj: Price | Product, session: Session):
     return existing_obj
 
 
-def create_product_object(product_data):
-    n = product_data["name"].lower()
-    if "marsh" in n:
-        print()
-    return Product(data=product_data)
-
-
 def create_price_objects(product_data) -> list[Price]:
     prices: list[Price] = []
 
     for product in product_data:
         for price_data in product["prices"]:
-            price: Price = create_price_object(
-                price_data=price_data, product_data=product
-            )
+            price: Price = Price(price_data=price_data, product_data=product)
             prices.append(price)
 
     return prices
-
-
-def create_price_object(price_data, product_data) -> Price:
-    return Price(price_data, product_data)

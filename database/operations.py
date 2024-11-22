@@ -1,15 +1,14 @@
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import Session
-from database.models import Base
+from database.models import Base, Product
 from database.utils import (
     create_price_objects,
-    create_product_object,
     remove_duplicates,
 )
 
 
 def process_product_data(product_data, session: Session):
-    product_objs = [create_product_object(product) for product in product_data]
+    product_objs = [Product(product) for product in product_data]
     products = remove_duplicates(product_objs, session)
 
     price_objs = create_price_objects(product_data)
