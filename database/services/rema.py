@@ -98,4 +98,4 @@ def fetch_from_file(file_name):
 
 
 if __name__ == "__main__":
-    products = fetch(True)
+    fetch(True)

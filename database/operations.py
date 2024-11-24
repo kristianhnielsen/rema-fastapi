@@ -1,20 +1,25 @@
 from sqlalchemy import create_engine, Engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import sessionmaker
 from database.models import Base, Product
 from database.utils import (
     create_price_objects,
     remove_duplicates,
 )
 
-
-class Database:
-    def __init__(self) -> None:
-        self.engine: Engine = create_engine("sqlite:///rema.db")
-        self.session: Session = Session(bind=self.engine)
-        Base.metadata.create_all(self.engine)
+engine: Engine = create_engine("sqlite:///rema.db")
+db_session: sessionmaker = sessionmaker(bind=engine)
+Base.metadata.create_all(engine)
 
 
-def process_product_data(product_data, session: Session):
+def get_db():
+    database = db_session()
+    try:
+        yield database
+    finally:
+        database.close()
+
+
+def process_product_data(product_data, session):
     product_objs = [Product(product) for product in product_data]
     products = remove_duplicates(product_objs, session)
 
@@ -25,9 +30,7 @@ def process_product_data(product_data, session: Session):
 
 
 def add_products(data):
-    db = Database()
-
-    with db.session as session:
+    with db_session() as session:
         products, prices = process_product_data(data, session)
 
         print(f"New products found: {len(products)}")
