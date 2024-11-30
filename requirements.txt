@@ -2,3 +2,4 @@ fastapi
 sqlalchemy
 requests
 pandas
+uvicorn
