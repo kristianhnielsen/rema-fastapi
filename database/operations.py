@@ -5,8 +5,15 @@ from database.utils import (
     create_price_objects,
     remove_duplicates,
 )
+import os
+from dotenv import load_dotenv
 
-engine: Engine = create_engine("sqlite:///rema.db")
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("Database Environment variable not found")
+
+engine: Engine = create_engine(DATABASE_URL)
 db_session: sessionmaker = sessionmaker(bind=engine)
 Base.metadata.create_all(engine)
 
