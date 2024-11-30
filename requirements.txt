@@ -3,3 +3,4 @@ sqlalchemy
 requests
 pandas
 uvicorn
+python-dotenv
