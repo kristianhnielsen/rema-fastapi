@@ -20,7 +20,7 @@ async def get_all_products(
     products = session.execute(query).all()
 
     return [
-        {"id": prod[1], "name": prod[0], "department": prod[2], "img": prod[3]}
+        {"id": prod[0], "name": prod[1], "department": prod[2], "img": prod[3]}
         for prod in products
     ]
 
