@@ -47,7 +47,9 @@ async def get_product_prices(
                 price_points,
             )
         )
-        if len(price_points_in_range) == 1:
+        if len(price_points_in_range) == 0:
+            continue  # no price point found
+        elif len(price_points_in_range) == 1:
             price_on_date[date_str] = PriceOnDate(price_points_in_range[0])
         else:
             # there are more than one price point valid  during this date
