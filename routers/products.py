@@ -10,12 +10,16 @@ router = APIRouter(prefix=route_prefix)
 
 @router.get("/")
 async def get_all_products(
-    limit: int | None = None, session: Session = Depends(get_db)
+    limit: int | None = None,
+    offset: int | None = None,
+    session: Session = Depends(get_db),
 ):
 
-    query = select(
-        Product.id, Product.name, Product.department_name, Product.image
-    ).limit(limit)
+    query = (
+        select(Product.id, Product.name, Product.department_name, Product.image)
+        .limit(limit)
+        .offset(offset)
+    )
 
     products = session.execute(query).all()
 
