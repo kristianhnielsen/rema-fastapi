@@ -17,6 +17,7 @@ class PriceOnDate:
         self.is_advertised = price.is_advertised
         self.is_campaign = price.is_campaign
         self.compare_unit_price = price.compare_unit_price
+        self.compare_unit = price.compare_unit
 
 
 @router.get("/{product_id}")
