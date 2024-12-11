@@ -43,7 +43,12 @@ def process_product(product: dict, department: dict):
 
     # Only keep medium-size image
     try:
-        img_url = product["images"][0]["medium"]
+        # Prioritize get medium quality img
+        if product["images"][0]["medium"]:
+            img_url = product["images"][0]["medium"]
+        else:
+            # Settle for small img
+            img_url = product["images"][0]["small"]
         product["image"] = img_url
         del product["images"]
     except IndexError:
