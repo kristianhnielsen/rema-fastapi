@@ -17,7 +17,7 @@ async def get_all_products(
 
     query = select(Product).limit(limit).offset(offset)
 
-    products = session.execute(query).all()
+    products = session.execute(query).scalars().all()
 
     return products
 
