@@ -29,6 +29,12 @@ async def get_all_products(
     ]
 
 
+@router.get("/count")
+async def get_products_count(session: Session = Depends(get_db)):
+    count = session.query(Product).count()
+    return count
+
+
 @router.get("/{id}")
 async def get_product_by_id(
     id: int,
