@@ -15,18 +15,11 @@ async def get_all_products(
     session: Session = Depends(get_db),
 ):
 
-    query = (
-        select(Product.id, Product.name, Product.department_name, Product.image)
-        .limit(limit)
-        .offset(offset)
-    )
+    query = select(Product).limit(limit).offset(offset)
 
     products = session.execute(query).all()
 
-    return [
-        {"id": prod[0], "name": prod[1], "department": prod[2], "img": prod[3]}
-        for prod in products
-    ]
+    return products
 
 
 @router.get("/count")
