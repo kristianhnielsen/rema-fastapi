@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from database.models import Product
 from database.operations import get_db
@@ -19,3 +20,12 @@ async def get_all_departments(session: Session = Depends(get_db)):
             for dept in departments
         ]
     }
+
+
+@router.get("/{department_id}")
+async def get_products_from_department(
+    department_id: int, session: Session = Depends(get_db)
+):
+    query = select(Product).where(Product.department_id == department_id)
+    products = session.execute(query).scalars().all()
+    return products
