@@ -14,12 +14,9 @@ async def get_all_departments(session: Session = Depends(get_db)):
     departments = (
         session.query(Product.department_name, Product.department_id).distinct().all()
     )
-    return {
-        "departments": [
-            {"name": dept.department_name, "id": dept.department_id}
-            for dept in departments
-        ]
-    }
+    return [
+        {"name": dept.department_name, "id": dept.department_id} for dept in departments
+    ]
 
 
 @router.get("/{department_id}")
