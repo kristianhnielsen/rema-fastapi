@@ -19,6 +19,12 @@ async def get_all_departments(session: Session = Depends(get_db)):
     ]
 
 
+@router.get("/{department_id}/count")
+async def get_products_count(department_id: int, session: Session = Depends(get_db)):
+    count = session.query(Product).where(Product.department_id == department_id).count()
+    return count
+
+
 @router.get("/{department_id}")
 async def get_products_from_department(
     department_id: int, session: Session = Depends(get_db)
