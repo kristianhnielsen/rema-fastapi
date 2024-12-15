@@ -15,7 +15,7 @@ async def get_all_products(
     session: Session = Depends(get_db),
 ):
 
-    query = select(Product).limit(limit).offset(offset)
+    query = select(Product).order_by(Product.name).limit(limit).offset(offset)
 
     products = session.execute(query).scalars().all()
 

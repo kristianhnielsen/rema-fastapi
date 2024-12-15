@@ -35,6 +35,7 @@ async def get_products_from_department(
     query = (
         select(Product)
         .where(Product.department_id == department_id)
+        .order_by(Product.name)
         .limit(limit)
         .offset(offset)
     )
