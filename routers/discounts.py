@@ -1,6 +1,6 @@
 from datetime import datetime
 from fastapi import APIRouter, Depends
-from sqlalchemy import and_, desc, func, select
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session, joinedload
 from database.models import Price, Product
 from database.operations import get_db
@@ -137,53 +137,3 @@ async def get_department_deals(db: Session = Depends(get_db)):
         )
 
     return department_deals
-
-
-def get_advertised_products_sorted_by_difference_percent(db: Session):
-    """
-    Fetch all currently advertised products and sort them by price difference percentage.
-    """
-    results = db.execute(
-        select(
-            Product.id.label("product_id"),
-            Product.name.label("product_name"),
-            Price.price.label("advertised_price"),
-            (
-                select(Price.price)
-                .where(Price.product_id == Product.id, Price.is_advertised == False)
-                .order_by(desc(Price.starting_at))
-                .limit(1)
-                .correlate(None)  # Prevent correlation with the outer query
-                .scalar_subquery()
-            ).label("regular_price"),
-        )
-        .join(Price, Product.id == Price.product_id)
-        .where(Price.is_advertised == True)
-    ).all()
-
-    # Process results to calculate percentage difference and sort
-    advertised_products = []
-    for row in results:
-        regular_price = row.regular_price
-        advertised_price = row.advertised_price
-
-        if regular_price and advertised_price and regular_price > 0:
-            difference_amount = regular_price - advertised_price
-            difference_percent = (difference_amount / regular_price) * 100
-
-            advertised_products.append(
-                {
-                    "product_id": row.product_id,
-                    "product_name": row.product_name,
-                    "advertised_price": advertised_price,
-                    "regular_price": regular_price,
-                    "difference_amount": difference_amount,
-                    "difference_percent": difference_percent,
-                }
-            )
-
-    # Sort by price difference percentage in descending order
-    advertised_products.sort(key=lambda x: x["difference_percent"], reverse=True)
-
-    # Limit the number of results
-    return advertised_products
