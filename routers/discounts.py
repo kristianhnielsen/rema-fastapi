@@ -37,12 +37,13 @@ async def get_department_deals(db: Session = Depends(get_db)):
     department_prices = db.execute(
         select(
             Product.department_id,
+            Product.department_name,
             func.avg(Price.price).label("avg_price"),
             func.min(Price.price).label("min_price"),
             func.max(Price.price).label("max_price"),
         )
         .join(Price, Product.id == Price.product_id)
-        .group_by(Product.department_id)
+        .group_by(Product.department_id, Product.department_name)
     ).all()
 
     # Find advertised products and calculate price differences
@@ -83,6 +84,7 @@ async def get_department_deals(db: Session = Depends(get_db)):
             "avg_price": round(dept.avg_price, 2),
             "min_price": dept.min_price,
             "max_price": dept.max_price,
+            "department_name": dept.department_name,
             "best_deals": [],
         }
 
@@ -113,6 +115,8 @@ async def get_department_deals(db: Session = Depends(get_db)):
 
     for department_id, data in department_deals.items():
         products = data["best_deals"]
+        if len(products) == 0:
+            continue
         products_diff_amount = sum(
             [product["difference_amount"] for product in products]
         ) / len(products)
