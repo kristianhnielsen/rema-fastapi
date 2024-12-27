@@ -78,8 +78,9 @@ async def get_department_deals(db: Session = Depends(get_db)):
     ).all()
 
     # Process and structure the response
-    department_deals = []
+    departments = []
     for dept in department_prices:
+        # Base department object
         department = {
             "avg_price": round(dept.avg_price, 2),
             "min_price": dept.min_price,
@@ -88,35 +89,37 @@ async def get_department_deals(db: Session = Depends(get_db)):
             "department_id": dept.department_id,
             "best_deals": [],
         }
-        department_deals.append(department)
+        departments.append(department)
 
-    for row in advertised_products:
+    for product in advertised_products:
         regular_price = (
-            row.regular_price if row.regular_price is not None else row.advertised_price
+            product.regular_price
+            if product.regular_price is not None
+            else product.advertised_price
         )
-        advertised_price = row.advertised_price
 
-        if regular_price and advertised_price:
-            difference_amount = regular_price - advertised_price
-            difference_percent = (
-                (regular_price - advertised_price) / regular_price
-            ) * 100
+        difference_amount = regular_price - product.advertised_price
+        difference_percent = (
+            (regular_price - product.advertised_price) / regular_price
+        ) * 100
 
-            deal = {
-                "product_id": row.product_id,
-                "product_name": row.product_name,
-                "advertised_price": advertised_price,
-                "regular_price": regular_price,
-                "difference_amount": round(difference_amount, 2),
-                "difference_percent": round(difference_percent, 2),
-            }
+        # Base  deal object
+        deal = {
+            "product_id": product.product_id,
+            "product_name": product.product_name,
+            "advertised_price": product.advertised_price,
+            "regular_price": regular_price,
+            "difference_amount": round(difference_amount, 2),
+            "difference_percent": round(difference_percent, 2),
+        }
 
-            # Add the deal to the respective department
-            for department in department_deals:
-                if row.department_id == department["department_id"]:
-                    department["best_deals"].append(deal)
+        # Add the deal to the respective department
+        for department in departments:
+            if product.department_id == department["department_id"]:
+                department["best_deals"].append(deal)
 
-    for department in department_deals:
+    # After getting all deals, calc avg price differences
+    for department in departments:
         products = department["best_deals"]
         if len(products) == 0:
             continue
@@ -130,11 +133,16 @@ async def get_department_deals(db: Session = Depends(get_db)):
         department["avg_difference_percent"] = round(products_diff_percent, 2)
 
     # Sort deals on price difference in percent
-    for department in department_deals:
+    for department in departments:
         department["best_deals"] = sorted(
             department["best_deals"],
             key=lambda x: x["difference_percent"],
             reverse=True,
         )
 
-    return sorted(department_deals, key=lambda dept: dept["department_id"])
+    # Sort list by department_id
+    departments_sorted_by_id = sorted(
+        departments, key=lambda dept: dept["department_id"]
+    )
+
+    return departments_sorted_by_id
