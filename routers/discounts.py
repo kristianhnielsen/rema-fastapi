@@ -78,15 +78,17 @@ async def get_department_deals(db: Session = Depends(get_db)):
     ).all()
 
     # Process and structure the response
-    department_deals = {}
+    department_deals = []
     for dept in department_prices:
-        department_deals[dept.department_id] = {
+        department = {
             "avg_price": round(dept.avg_price, 2),
             "min_price": dept.min_price,
             "max_price": dept.max_price,
             "department_name": dept.department_name,
+            "department_id": dept.department_id,
             "best_deals": [],
         }
+        department_deals.append(department)
 
     for row in advertised_products:
         regular_price = (
@@ -110,11 +112,12 @@ async def get_department_deals(db: Session = Depends(get_db)):
             }
 
             # Add the deal to the respective department
-            if row.department_id in department_deals:
-                department_deals[row.department_id]["best_deals"].append(deal)
+            for department in department_deals:
+                if row.department_id == department["department_id"]:
+                    department["best_deals"].append(deal)
 
-    for department_id, data in department_deals.items():
-        products = data["best_deals"]
+    for department in department_deals:
+        products = department["best_deals"]
         if len(products) == 0:
             continue
         products_diff_amount = sum(
@@ -123,17 +126,15 @@ async def get_department_deals(db: Session = Depends(get_db)):
         products_diff_percent = sum(
             [product["difference_percent"] for product in products]
         ) / len(products)
-        department_deals[department_id]["avg_difference_amount"] = round(
-            products_diff_amount, 2
-        )
-        department_deals[department_id]["avg_difference_percent"] = round(
-            products_diff_percent, 2
-        )
+        department["avg_difference_amount"] = round(products_diff_amount, 2)
+        department["avg_difference_percent"] = round(products_diff_percent, 2)
 
     # Sort deals on price difference in percent
-    for dept_id, data in department_deals.items():
-        data["best_deals"] = sorted(
-            data["best_deals"], key=lambda x: x["difference_percent"], reverse=True
+    for department in department_deals:
+        department["best_deals"] = sorted(
+            department["best_deals"],
+            key=lambda x: x["difference_percent"],
+            reverse=True,
         )
 
-    return department_deals
+    return sorted(department_deals, key=lambda dept: dept["department_id"])
