@@ -1,9 +1,11 @@
 from datetime import datetime
+from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session, joinedload
 from database.models import Price, Product
 from database.operations import get_db
+from routers.models import DiscountDeal, DiscountDepartment
 
 route_prefix = "/discount"
 router = APIRouter(prefix=route_prefix)
@@ -78,71 +80,38 @@ async def get_department_deals(db: Session = Depends(get_db)):
     ).all()
 
     # Process and structure the response
-    departments = []
+    departments: List[DiscountDepartment] = []
     for dept in department_prices:
         # Base department object
-        department = {
-            "avg_price": round(dept.avg_price, 2),
-            "min_price": dept.min_price,
-            "max_price": dept.max_price,
-            "department_name": dept.department_name,
-            "department_id": dept.department_id,
-            "best_deals": [],
-        }
-        departments.append(department)
-
-    for product in advertised_products:
-        regular_price = (
-            product.regular_price
-            if product.regular_price is not None
-            else product.advertised_price
+        department = DiscountDepartment(
+            avg_price=dept.avg_price,
+            min_price=dept.min_price,
+            max_price=dept.max_price,
+            department_name=dept.department_name,
+            department_id=dept.department_id,
         )
 
-        difference_amount = regular_price - product.advertised_price
-        difference_percent = (
-            (regular_price - product.advertised_price) / regular_price
-        ) * 100
-
-        # Base  deal object
-        deal = {
-            "product_id": product.product_id,
-            "product_name": product.product_name,
-            "advertised_price": product.advertised_price,
-            "regular_price": regular_price,
-            "difference_amount": round(difference_amount, 2),
-            "difference_percent": round(difference_percent, 2),
-        }
-
         # Add the deal to the respective department
-        for department in departments:
-            if product.department_id == department["department_id"]:
-                department["best_deals"].append(deal)
+        for product in advertised_products:
+            # Base  deal object
+            if product.department_id == department.department_id:
+                deal = DiscountDeal(
+                    product_id=product.product_id,
+                    product_name=product.product_name,
+                    advertised_price=product.advertised_price,
+                    regular_price=product.regular_price,
+                )
+                department.deals.append(deal)
 
-    # After getting all deals, calc avg price differences
-    for department in departments:
-        products = department["best_deals"]
-        if len(products) == 0:
-            continue
-        products_diff_amount = sum(
-            [product["difference_amount"] for product in products]
-        ) / len(products)
-        products_diff_percent = sum(
-            [product["difference_percent"] for product in products]
-        ) / len(products)
-        department["avg_difference_amount"] = round(products_diff_amount, 2)
-        department["avg_difference_percent"] = round(products_diff_percent, 2)
+        department.calc_avg_diff_amount()
+        department.calc_avg_diff_percent()
+        departments.append(department)
 
     # Sort deals on price difference in percent
     for department in departments:
-        department["best_deals"] = sorted(
-            department["best_deals"],
-            key=lambda x: x["difference_percent"],
-            reverse=True,
-        )
+        department.sort_deals_by_discount_percent()
 
     # Sort list by department_id
-    departments_sorted_by_id = sorted(
-        departments, key=lambda dept: dept["department_id"]
-    )
+    departments_sorted_by_id = sorted(departments, key=lambda dept: dept.department_id)
 
     return departments_sorted_by_id
