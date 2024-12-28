@@ -55,6 +55,7 @@ async def get_department_deals(db: Session = Depends(get_db)):
         select(
             Product.id.label("product_id"),
             Product.name.label("product_name"),
+            Product.image,
             Product.department_name,
             Product.department_id,
             Price.price.label("advertised_price"),
@@ -98,6 +99,7 @@ async def get_department_deals(db: Session = Depends(get_db)):
                 deal = DiscountDeal(
                     product_id=product.product_id,
                     product_name=product.product_name,
+                    image=product.image,
                     advertised_price=product.advertised_price,
                     regular_price=product.regular_price,
                 )

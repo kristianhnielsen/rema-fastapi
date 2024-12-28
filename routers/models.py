@@ -98,11 +98,13 @@ class DiscountDeal:
         self,
         product_id,
         product_name,
+        image,
         advertised_price,
         regular_price,
     ) -> None:
         self.product_id = product_id
         self.product_name = product_name
+        self.image = image
         self.advertised_price = advertised_price
         self.regular_price = (
             regular_price if regular_price is not None else advertised_price
