@@ -123,3 +123,30 @@ class DiscountDeal:
             self.calc_difference_amount(rounded=False) / self.regular_price
         ) * 100
         return round(difference_percent, 2)
+
+
+class PriceMetricsOnDate:
+    def __init__(
+        self,
+        median_price: float,
+        min_price: float,
+        max_price: float,
+        price_volatility: float,
+    ) -> None:
+        self.median_price = round(median_price, 2)
+        self.min_price = min_price
+        self.max_price = max_price
+        self.price_volatility = round(price_volatility, 2)
+
+
+class DepartmentPriceMetricsResponse:
+    def __init__(
+        self,
+        department_id: int,
+        department_name: str,
+        price_on_date: Dict[str, PriceMetricsOnDate],
+    ) -> None:
+
+        self.department_id = department_id
+        self.department_name = department_name
+        self.price_on_date = price_on_date
