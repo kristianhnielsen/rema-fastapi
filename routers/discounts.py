@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List
 from fastapi import APIRouter, Depends
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, desc, func, select
 from sqlalchemy.orm import Session, joinedload
 from database.models import Price, Product
 from database.operations import get_db
@@ -34,7 +34,7 @@ async def get_all_advertised_products(db: Session = Depends(get_db)):
 
 
 @router.get("/departments")
-async def get_department_deals(db: Session = Depends(get_db)):
+async def get_all_departments_deals(db: Session = Depends(get_db)):
     # Aggregate department-level price data
     department_prices = db.execute(
         select(
@@ -117,3 +117,167 @@ async def get_department_deals(db: Session = Depends(get_db)):
     departments_sorted_by_id = sorted(departments, key=lambda dept: dept.department_id)
 
     return departments_sorted_by_id
+
+
+@router.get("/departments/{department_id}")
+async def get_department_deals(department_id: int, db: Session = Depends(get_db)):
+
+    # Find advertised products and calculate price differences
+    # Get today's date
+    today = datetime.today()
+    advertised_products = db.execute(
+        select(
+            Product.id.label("product_id"),
+            Product.name.label("product_name"),
+            Product.image,
+            Product.department_name,
+            Product.department_id,
+            Price.price.label("advertised_price"),
+            (
+                select(Price.price)
+                .where(
+                    Price.product_id == Product.id,
+                    Price.is_advertised == False,
+                    # Price.starting_at < today,
+                )
+                .limit(1)  # Only get the closest match
+                .correlate(Product)  # Ensure correlation with the outer query
+                .scalar_subquery()
+            ).label("regular_price"),
+        )
+        .join(Price, Product.id == Price.product_id)
+        .where(
+            Price.is_advertised == True,
+            Product.department_id == department_id,
+            Price.starting_at <= today,
+            Price.ending_at >= today,
+        )
+        .distinct()  # Ensure no duplicates for the advertised prices
+    ).all()
+
+    # Process and structure the response
+    department_deals = [
+        DiscountDeal(
+            product_id=product.product_id,
+            product_name=product.product_name,
+            image=product.image,
+            advertised_price=product.advertised_price,
+            regular_price=product.regular_price,
+        )
+        for product in advertised_products
+    ]
+    department_deals_sorted = sorted(
+        department_deals, key=lambda product: product.difference_amount, reverse=True
+    )
+
+    return department_deals_sorted
+
+
+@router.get("/top-10-discounts")
+async def get_top_10_discount_products(db: Session = Depends(get_db)):
+    # Get today's date
+    today = datetime.today()
+
+    # Find advertised products and calculate price differences
+    advertised_products = db.execute(
+        select(
+            Product.id.label("product_id"),
+            Product.name.label("product_name"),
+            Product.image,
+            Product.department_name,
+            Product.department_id,
+            Price.price.label("advertised_price"),
+            (
+                select(Price.price)
+                .where(
+                    Price.product_id == Product.id,
+                    Price.is_advertised == False,
+                    # Price.starting_at < today,
+                )
+                .limit(1)  # Only get the closest match
+                .correlate(Product)  # Ensure correlation with the outer query
+                .scalar_subquery()
+            ).label("regular_price"),
+        )
+        .join(Price, Product.id == Price.product_id)
+        .where(
+            Price.is_advertised == True,
+            Price.starting_at <= today,
+            Price.ending_at >= today,
+        )
+        .distinct()  # Ensure no duplicates for the advertised prices
+    ).all()
+
+    allDeals = [
+        DiscountDeal(
+            product_id=product.product_id,
+            product_name=product.product_name,
+            image=product.image,
+            advertised_price=product.advertised_price,
+            regular_price=product.regular_price,
+        )
+        for product in advertised_products
+    ]
+
+    top_10_deals = sorted(
+        allDeals, key=lambda product: product.difference_amount, reverse=True
+    )[:10]
+
+    return top_10_deals
+
+
+@router.get("/under-50-percent")
+async def get_products_under_half_price(db: Session = Depends(get_db)):
+
+    # Find advertised products and calculate price differences
+    # Get today's date
+    today = datetime.today()
+    advertised_products = db.execute(
+        select(
+            Product.id.label("product_id"),
+            Product.name.label("product_name"),
+            Product.image,
+            Product.department_name,
+            Product.department_id,
+            Price.price.label("advertised_price"),
+            (
+                select(Price.price)
+                .where(
+                    Price.product_id == Product.id,
+                    Price.is_advertised == False,
+                    # Price.starting_at < today,
+                )
+                .limit(1)  # Only get the closest match
+                .correlate(Product)  # Ensure correlation with the outer query
+                .scalar_subquery()
+            ).label("regular_price"),
+        )
+        .join(Price, Product.id == Price.product_id)
+        .where(
+            Price.is_advertised == True,
+            Price.starting_at <= today,
+            Price.ending_at >= today,
+        )
+        .distinct()  # Ensure no duplicates for the advertised prices
+    ).all()
+
+    allDeals = [
+        DiscountDeal(
+            product_id=product.product_id,
+            product_name=product.product_name,
+            image=product.image,
+            advertised_price=product.advertised_price,
+            regular_price=product.regular_price,
+        )
+        for product in advertised_products
+    ]
+    under_half_price_products = list(
+        filter(lambda product: product.difference_percent >= 50, allDeals)
+    )
+    under_half_price_products_sorted = sorted(
+        under_half_price_products,
+        key=lambda product: product.difference_percent,
+        reverse=True,
+    )
+
+    return under_half_price_products_sorted
