@@ -125,6 +125,24 @@ async def get_department_deals(department_id: int, db: Session = Depends(get_db)
     # Find advertised products and calculate price differences
     # Get today's date
     today = datetime.today()
+    # Subquery to find the closest starting_at date for each product
+    closest_advertisement_subquery = (
+        select(
+            Price.product_id,
+            func.min(Price.starting_at).label("closest_starting_at"),
+        )
+        .where(
+            and_(
+                Price.is_advertised == True,
+                Price.starting_at <= today,
+                Price.ending_at >= today,
+            )
+        )
+        .group_by(Price.product_id)
+        .subquery()
+    )
+
+    # Main query to get the relevant products with the closest advertisement
     advertised_products = db.execute(
         select(
             Product.id.label("product_id"),
@@ -134,25 +152,29 @@ async def get_department_deals(department_id: int, db: Session = Depends(get_db)
             Product.department_id,
             Price.price.label("advertised_price"),
             (
-                select(Price.price)
+                select(func.coalesce(Price.price, Price.price))  # Handle NULLs
                 .where(
                     Price.product_id == Product.id,
                     Price.is_advertised == False,
-                    # Price.starting_at < today,
                 )
-                .limit(1)  # Only get the closest match
-                .correlate(Product)  # Ensure correlation with the outer query
+                .limit(1)
+                .correlate(Product)
                 .scalar_subquery()
             ).label("regular_price"),
         )
         .join(Price, Product.id == Price.product_id)
-        .where(
-            Price.is_advertised == True,
-            Product.department_id == department_id,
-            Price.starting_at <= today,
-            Price.ending_at >= today,
+        .join(
+            closest_advertisement_subquery,
+            and_(
+                Price.product_id == closest_advertisement_subquery.c.product_id,
+                Price.starting_at
+                == closest_advertisement_subquery.c.closest_starting_at,
+            ),
         )
-        .distinct()  # Ensure no duplicates for the advertised prices
+        .where(
+            Product.department_id == department_id,
+        )
+        .distinct()
     ).all()
 
     # Process and structure the response
