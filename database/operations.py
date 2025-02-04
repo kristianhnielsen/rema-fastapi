@@ -13,7 +13,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("Database Environment variable not found")
 
-engine: Engine = create_engine(DATABASE_URL)
+engine: Engine = create_engine(DATABASE_URL, pool_size=20, max_overflow=40)
 db_session: sessionmaker = sessionmaker(bind=engine)
 Base.metadata.create_all(engine)
 
