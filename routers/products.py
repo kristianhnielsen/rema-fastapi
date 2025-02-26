@@ -27,6 +27,23 @@ async def get_all_products(
     return products
 
 
+@router.get("/search/")
+async def search_products(
+    query: str | None = None,
+    session: Session = Depends(get_db),
+):
+    if not query:
+        raise HTTPException(status_code=400, detail="Query parameter is required")
+
+    statement = select(Product).filter(Product.name.ilike(f"%{query}%"))
+    result = session.execute(statement).scalars().all()
+
+    if not result:
+        raise HTTPException(status_code=404, detail="No products found")
+
+    return result
+
+
 @router.get("/count")
 async def get_products_count(session: Session = Depends(get_db)):
     count = session.query(Product).count()
