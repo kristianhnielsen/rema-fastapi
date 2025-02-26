@@ -36,7 +36,7 @@ async def search_products(
         raise HTTPException(status_code=400, detail="Query parameter is required")
 
     statement = select(Product).filter(Product.name.ilike(f"%{query}%"))
-    result = session.execute(statement).scalars().all()
+    result = session.execute(statement).scalars().unique().all()
 
     if not result:
         raise HTTPException(status_code=404, detail="No products found")
